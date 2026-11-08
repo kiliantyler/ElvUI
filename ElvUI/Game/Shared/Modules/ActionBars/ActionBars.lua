@@ -1306,6 +1306,18 @@ do
 			end
 		end
 
+		-- Edit Mode (Mainline family: Retail + Forever) scales the right action bars to fit between
+		-- MinimapCluster:GetBottom() - 10 and MicroButtonAndBagsBar:GetTop() + 24. When the ElvUI minimap
+		-- is moved to the bottom of the screen that space goes negative and MultiBarRight:SetScale()
+		-- errors ("Scale must be > 0"), aborting UpdateLayoutInfo: Edit Mode can't save a new layout,
+		-- selections stay up after exiting, and frames get left at reverted positions.
+		-- MicroButtonAndBagsBar is hidden above and only used as an anchor, so park it below the screen.
+		local microAndBags = _G.MicroButtonAndBagsBar
+		if microAndBags then
+			microAndBags:ClearAllPoints()
+			microAndBags:SetPoint('TOPRIGHT', UIParent, 'BOTTOMRIGHT', 0, -2000)
+		end
+
 		for name in next, untaintButtons do
 			local index = 1
 			local button = _G[name..index]
