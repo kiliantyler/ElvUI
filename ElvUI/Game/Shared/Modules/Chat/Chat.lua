@@ -1562,6 +1562,31 @@ function CH:ResnapDock(event, arg1, arg2)
 	CH:SnappingChanged(_G.GeneralDockManager.primary)
 end
 
+-- Edit Mode re-applies its own anchor/size to ChatFrame1 (on layout load, revert, exit, save, and on
+-- PLAYER_SPECIALIZATION_CHANGED which also fires on level up). ResnapDock unsnaps first and then
+-- re-detects the snapped window by overlap, which fails because Edit Mode has already moved the chat
+-- away from the panel. Keep the existing snap and just re-position. Deferred one frame so our code
+-- never runs inside Blizzard's Edit Mode call chain (an error there aborts RevertAllChanges, which
+-- breaks saving a new layout and leaves the selection boxes up when leaving Edit Mode).
+local editModeResnapQueued = false
+local function EditModeResnap()
+	editModeResnapQueued = false
+
+	for _, frameName in ipairs(_G.CHAT_FRAMES) do
+		local chat = _G[frameName]
+		if chat then
+			CH:PositionChat(chat)
+		end
+	end
+end
+
+function CH:EditModeLayoutUpdated()
+	if editModeResnapQueued then return end
+	editModeResnapQueued = true
+
+	_G.C_Timer.After(0, EditModeResnap)
+end
+
 function CH:ShowBackground(background, show)
 	if not background then return end
 
@@ -4107,7 +4132,7 @@ function CH:Initialize()
 	CH:UpdateEditboxAnchors()
 	CH:HandleChatVoiceIcons()
 
-	CH:SecureHook(_G.EditModeManagerFrame, 'UpdateLayoutInfo', 'ResnapDock')
+	CH:SecureHook(_G.EditModeManagerFrame, 'UpdateLayoutInfo', 'EditModeLayoutUpdated')
 
 	CH:SecureHook(_G.ChatFrameUtil, 'ActivateChat', 'ChatEdit_ActivateChat')
 	CH:SecureHook(_G.ChatFrameUtil, 'DeactivateChat', 'ChatEdit_DeactivateChat')
