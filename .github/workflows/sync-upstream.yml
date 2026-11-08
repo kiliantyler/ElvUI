@@ -1,0 +1,43 @@
+# Fork-only: merge tukui-org/ElvUI main into this fork's main (which carries our local fixes) once a day.
+# A merge conflict fails the job, and GitHub emails the repo owner.
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # 08:00 UTC daily (03:00/04:00 US Eastern)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'kiliantyler/ElvUI'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Merge upstream main
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git remote add upstream https://github.com/tukui-org/ElvUI.git
+          git fetch --no-tags upstream main
+
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo 'Already up to date with upstream.'
+            exit 0
+          fi
+
+          echo 'New upstream commits:'
+          git log --oneline HEAD..upstream/main
+
+          git merge --no-edit upstream/main
+          git push origin HEAD:main
