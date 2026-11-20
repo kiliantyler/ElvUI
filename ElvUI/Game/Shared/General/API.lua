@@ -34,8 +34,6 @@ local IsWargame = IsWargame
 local IsXPUserDisabled = IsXPUserDisabled
 local RequestBattlefieldScoreData = RequestBattlefieldScoreData
 local UIParent = UIParent
-local UnitExists = UnitExists
-local UnitIsVisible = UnitIsVisible
 local UnitHasPowerType = UnitHasPowerType
 local UnitClassification = UnitClassification
 local UnitFactionGroup = UnitFactionGroup
@@ -886,11 +884,12 @@ function E:AddNonPetBattleFrames()
 		if type(data) == 'table' then
 			parent, strata = data.parent, data.strata
 		elseif data == true then
-			parent = UIParent
+			parent = E.UIParent
 		end
 
 		local obj = _G[object] or object
 		obj:SetParent(parent)
+
 		if strata then
 			obj:SetFrameStrata(strata)
 		end

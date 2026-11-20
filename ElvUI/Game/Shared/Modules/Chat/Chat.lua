@@ -354,11 +354,7 @@ do --this can save some main file locals
 	specialChatIcons = z
 
 	local portal = GetCVar('portal')
-	if portal == 'test' then
-		if E.Forever then
-			z['Player-4618-007349AE'] = itsSimpy
-		end
-	elseif portal == 'US' then
+	if portal == 'US' then
 		if E.Classic then
 			-- Simpy Seasonal (5813: Wild Growth)
 			z['Player-5813-0301DEC1']	= itsSimpy -- Warlock: Yubi
@@ -633,6 +629,11 @@ do --this can save some main file locals
 		elseif E.Forever then
 			-- AcidWeb
 			z['Player-6940-000CC5DB']	= Gem
+			-- Merathilis
+			z['Player-6939-00848373']	= ElvRed
+			-- Luckyone
+			z['Player-6945-0024F82A']	= ElvGreen -- [Horde] Hunter
+			z['Player-6945-0024F7B0']	= ElvGreen -- [Horde] Druid
 		end
 	end
 end
