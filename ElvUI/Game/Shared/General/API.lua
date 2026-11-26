@@ -38,6 +38,7 @@ local UnitHasPowerType = UnitHasPowerType
 local UnitClassification = UnitClassification
 local UnitFactionGroup = UnitFactionGroup
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned
+local UnitHasEffectivelyTankAura = UnitHasEffectivelyTankAura
 local UnitHasVehicleUI = UnitHasVehicleUI
 local UnitIsAFK = UnitIsAFK
 local UnitIsDND = UnitIsDND
@@ -1408,10 +1409,24 @@ do -- complicated backwards compatible menu
 	end
 end
 
+function E:UnitHasTankAura(unit)
+	if not E.Forever then return end
+
+	local tankAura = UnitHasEffectivelyTankAura(unit)
+
+	if E:NotSecretValue(tankAura) then
+		return tankAura
+	end
+end
+
 function E:UnitTankedByGroup(unit)
-	for unitToken in next, E.GroupUnitsByRole.TANK do
-		if E:GetThreatSituation(unit, unitToken) == 3 then
-			return unitToken
+	local tanks = E.GroupUnitsByRole.TANK
+	for unitToken in next, E.Forever and E.GroupRoles or tanks do
+		if unitToken ~= 'player' and (tanks[unitToken] or E:UnitHasTankAura(unitToken)) then
+			local status = E:GetThreatSituation(unit, unitToken)
+			if E:NotSecretValue(status) and (status and status >= 2) then
+				return unitToken -- satus 2 is still tanking, another unit just has more threat
+			end
 		end
 	end
 end
@@ -1419,6 +1434,8 @@ end
 function E:GROUP_ROSTER_UPDATE()
 	local isInRaid = IsInRaid()
 	E.IsInGroup = isInRaid or IsInGroup()
+
+	E:CheckRole()
 
 	wipe(E.GroupRoles)
 
@@ -1554,6 +1571,7 @@ function E:LoadAPI()
 	E:RegisterEvent('PLAYER_ENTERING_WORLD')
 	E:RegisterEvent('PLAYER_REGEN_ENABLED')
 	E:RegisterEvent('PLAYER_REGEN_DISABLED')
+	E:RegisterEvent('PLAYER_ROLES_ASSIGNED', 'CheckRole')
 	E:RegisterEvent('UI_SCALE_CHANGED', 'PixelScaleChanged')
 
 	E:GROUP_ROSTER_UPDATE()
